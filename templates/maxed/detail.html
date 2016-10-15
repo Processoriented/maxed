@@ -1,0 +1,45 @@
+<h1>{{ dataset.name }}</h1>
+
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+
+<form action="{% url 'maxed:addobj' dataset.id %}" method="post">
+{% csrf_token %}
+    <label for="forceobj">Primary Object</label>
+{% if dataset.primary_object %}
+    <input 
+        type="text" 
+        name="forceobj"
+        value="{{ dataset.primary_object }} ({{ dataset.primary_object.name }})"
+        disabled />
+    <input type="submit" value="Remove Object" />
+</form>
+<!-- 
+<form action="{% url 'maxed:fields' dataset.id %}" method="post">
+{% csrf_token %}
+{% for obj in dataset.availobjs %}
+    {% for f in obj.forceobj.forcefield_set.all %}
+    <input type="checkbox" name="usefield{{ obj.id }}" value="{{ f.id }}">
+    <label for="usefield{{ obj.id }}">{{ obj }}</label>
+    <select name="usefields{{ obj.id }}">
+        
+    </select>
+        <ul>
+        
+            <li>{{ f }}</li>
+        {% endfor %}
+        </ul>
+    </li>
+{% endfor %}
+</ul> -->
+{% else %}
+    <select name="forceobj">
+        <option></option>
+        {% for obj in common_objs %}
+        <option value="{{ obj.id  }}">{{ obj.label }} ({{ obj.name }})</option>
+        {% endfor %}
+    </select>
+    <input type="submit" value="Add Object" />
+</form>
+{% endif %}
+

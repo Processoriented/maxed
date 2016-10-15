@@ -1,0 +1,9 @@
+{% if dataset_list %}
+    <ul>
+    {% for dataset in dataset_list %}
+        <li><a href="{% url 'maxed:detail' dataset.id %}">{{ dataset.name }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No datasets are available.</p>
+{% endif %}
