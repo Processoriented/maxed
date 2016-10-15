@@ -15,17 +15,20 @@ class Credential(models.Model):
     access_token_url = models.CharField(
         max_length=255,
         default='https://login.salesforce.com/services/oauth2/token')
+    # http://PITC-Zscaler-US-MilwaukeeZ.proxy.corporate.ge.com:9400
     http_proxy = models.CharField(
         max_length=255,
         null=True,
-        blank=True,
-        default='http://PITC-Zscaler-US-MilwaukeeZ.proxy.corporate.ge.com:9400')
+        blank=True)
+    # https://PITC-Zscaler-US-MilwaukeeZ.proxy.corporate.ge.com:9400
     https_proxy = models.CharField(
         max_length=255,
         null=True,
-        blank=True,
-        default='https://PITC-Zscaler-US-MilwaukeeZ.proxy.corporate.ge.com:9400')
-    object_refresh_date = models.DateTimeField('objects refreshed', null=True, editable=False)
+        blank=True)
+    object_refresh_date = models.DateTimeField(
+        'objects refreshed',
+        null=True,
+        editable=False)
     conn = None
 
     def __str__(self):
@@ -63,7 +66,8 @@ class Credential(models.Model):
             tstHdr = {
                 'Authorization': 'Bearer ' + self.conn['access_token']
             }
-            tstUrl = self.conn['instance_url'] + '/services/data/v37.0/sobjects'
+            tstUrl = self.conn['instance_url']
+            tstUrl = tstUrl + '/services/data/v37.0/sobjects'
             tst = requests.get(tstUrl, headers=tstHdr, proxies=self.proxies())
             return (tst.status_code == 200)
 
@@ -87,7 +91,7 @@ class Credential(models.Model):
     def get_objects(self, reset=False):
         d = self.get_data('sobjects')
         for so in d['sobjects']:
-            ins = (so['queryable'] == True)
+            ins = (so['queryable'] is True)
             ins = ins and (len(self.forceobj_set.filter(name=so['name'])) == 0)
             if (ins or reset):
                 self.forceobj_set.update_or_create(
@@ -229,7 +233,6 @@ class ForceObj(models.Model):
     has_description.short_description = 'Description Populated?'
 
 
-
 class ForceField(models.Model):
     aggregatable = models.BooleanField(default=False)
     autoNumber = models.BooleanField(default=False)
@@ -242,7 +245,10 @@ class ForceField(models.Model):
     createable = models.BooleanField(default=False)
     custom = models.BooleanField(default=False)
     defaultValue = models.CharField(null=True, blank=True, max_length=40)
-    defaultValueFormula = models.CharField(null=True, blank=True, max_length=40)
+    defaultValueFormula = models.CharField(
+        null=True,
+        blank=True,
+        max_length=40)
     defaultedOnCreate = models.BooleanField(default=False)
     dependentPicklist = models.BooleanField(default=False)
     deprecatedAndHidden = models.BooleanField(default=False)
@@ -269,7 +275,10 @@ class ForceField(models.Model):
     permissionable = models.BooleanField(default=False)
     precision = models.IntegerField(null=True, blank=True)
     queryByDistance = models.BooleanField(default=False)
-    referenceTargetField = models.CharField(null=True, blank=True, max_length=40)
+    referenceTargetField = models.CharField(
+        null=True,
+        blank=True,
+        max_length=40)
     relationshipName = models.CharField(null=True, blank=True, max_length=40)
     relationshipOrder = models.CharField(null=True, blank=True, max_length=40)
     restrictedDelete = models.BooleanField(default=False)
@@ -341,7 +350,8 @@ class DataSetField(models.Model):
     hidden = models.BooleanField(default=False)
 
     def __str__(self):
-        d = [self.datasetobj.dataset.name,
+        d = [
+            self.datasetobj.dataset.name,
             self.datasetobj.forceobj.label,
             self.forcefield.label]
         return ".".join(d)
@@ -357,7 +367,7 @@ class DataSetField(models.Model):
 
 
 class FilterGroup(models.Model):
-    OPERATORS = (('AND', 'AND'),('OR','OR'),)
+    OPERATORS = (('AND', 'AND'), ('OR', 'OR'),)
     datasetobj = models.ForeignKey(DataSetObj, on_delete=models.CASCADE)
     operator = models.CharField(max_length=10, choices=OPERATORS)
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True)
@@ -382,18 +392,19 @@ class DataSetFilter(models.Model):
         choices=OPERATORS)
     value = models.CharField(max_length=255)
 
-    unquotedTypes = ['xsd:boolean','xsd:decimal','xsd:double',
-        'xsd:duration','xsd:float','xsd:gDay','xsd:gMonth',
-        'xsd:gMonthDay','xsd:gYear','xsd:gYearMonth','xsd:int',
-        'xsd:integer','xsd:long','xsd:negativeInteger',
-        'xsd:nonNegativeInteger','xsd:nonPositiveInteger',
-        'xsd:positiveInteger','xsd:short','xsd:unsignedInt',
-        'xsd:unsignedLong','xsd:unsignedShort'
+    unquotedTypes = [
+        'xsd:boolean', 'xsd:decimal', 'xsd:double',
+        'xsd:duration', 'xsd:float', 'xsd:gDay', 'xsd:gMonth',
+        'xsd:gMonthDay', 'xsd:gYear', 'xsd:gYearMonth', 'xsd:int',
+        'xsd:integer', 'xsd:long', 'xsd:negativeInteger',
+        'xsd:nonNegativeInteger', 'xsd:nonPositiveInteger',
+        'xsd:positiveInteger', 'xsd:short', 'xsd:unsignedInt',
+        'xsd:unsignedLong', 'xsd:unsignedShort'
     ]
 
     def __str__(self):
         qv = "'" + self.value + "'"
         ut = self.field.forcefield.soapType in self.unquotedTypes
         fv = self.value if ut else qv
-        d = [self.field.forcefield.name,self.operator,fv]
+        d = [self.field.forcefield.name, self.operator, fv]
         return " ".join(d)
