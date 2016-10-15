@@ -3,7 +3,6 @@ from django.utils import timezone
 import requests
 
 
-
 class Credential(models.Model):
     user_id = models.EmailField(max_length=80)
     password = models.CharField(max_length=80)
@@ -19,10 +18,12 @@ class Credential(models.Model):
     http_proxy = models.CharField(
         max_length=255,
         null=True,
+        blank=True,
         default='http://PITC-Zscaler-US-MilwaukeeZ.proxy.corporate.ge.com:9400')
     https_proxy = models.CharField(
         max_length=255,
         null=True,
+        blank=True,
         default='https://PITC-Zscaler-US-MilwaukeeZ.proxy.corporate.ge.com:9400')
     object_refresh_date = models.DateTimeField('objects refreshed', null=True, editable=False)
     conn = None
