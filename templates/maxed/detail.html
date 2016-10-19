@@ -1,6 +1,7 @@
 <h1>{{ dataset.name }}</h1>
 
 {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+{% if action_message %}<p><em>{{ action_message }}</em></p>{% endif %}
 
 
 <form action="{% url 'maxed:addobj' dataset.id %}" method="post">
@@ -14,24 +15,87 @@
         disabled />
     <input type="submit" value="Remove Object" />
 </form>
-<!-- 
-<form action="{% url 'maxed:fields' dataset.id %}" method="post">
-{% csrf_token %}
+<dl>
 {% for obj in dataset.availobjs %}
-    {% for f in obj.forceobj.forcefield_set.all %}
-    <input type="checkbox" name="usefield{{ obj.id }}" value="{{ f.id }}">
-    <label for="usefield{{ obj.id }}">{{ obj }}</label>
-    <select name="usefields{{ obj.id }}">
-        
-    </select>
-        <ul>
-        
-            <li>{{ f }}</li>
+    <dt>{{ dataset.name }}.{{ obj.forceobj.label }}</dt>
+    <dd>
+        <dl>
+            <dt>Query Text</dt>
+            <dd>{{ obj.fqueryText }}</dd>
+            <dt>Filters</dt>
+            {% for fg in obj.fgroups %}
+            <dd>{{ fg.fgText }}</dd>
+            {% endfor %}
+            <dd>
+                <form action="{% url 'maxed:addFilter' obj.id %}" method="post">
+                {% csrf_token %}
+                    <label for="fltrfield">Field</label>
+                    <select name="fltrfield">
+                        <option></option>
+                        {% for fld in obj.allfields %}
+                            {% if fld.hidden %} 
+                            {% else %}
+                        <option value="{{ fld.id }}">{{ fld.forcefield.name }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                    <select name="operator">
+                        <option></option>
+                        {% for op in fops %}
+                        <option value="{{ op }}">{{ op }}</option>
+                        {% endfor %}
+                    </select>
+                    <input name="fltrVal" type="text" />
+                </form>
+            </dd>
+            <dt>Included Fields</dt>
+    <form action="{% url 'maxed:fields' obj.id %}" method="post">
+    {% csrf_token %}
+        <dd><label for="showall">
+            <input 
+                name="showhideall"
+                id="showall"
+                type="radio"
+                value="1" />
+            Show All</label>
+            <label for="hideall">
+            <input 
+                name="showhideall"
+                id="hideall"
+                type="radio"
+                value="0" />
+            Hide All</label>
+            <input name="showhideall" id="noact" type="radio" value="-1" checked hidden />
+        <input type="submit" value="Update Object" />
+        {% for fld in obj.allfields %}
+            <dd>
+                <label for="hidden{{ fld.id }}">
+                    <input 
+                        name="hidden"
+                        id="hidden{{ fld.id }}"
+                        type="checkbox"
+                        {% if fld.hidden %} {% else %} checked {% endif %}
+                        value="{{ fld.id }}" />
+                    {{ fld.forcefield.label }} ({{ fld.forcefield.name }})
+                </label>
+                {% if fld.forcefield.hasRef %}
+                <br />
+                <label for="rel_obj{{ fld.id }}">Related Object</label>
+                <select name="rel_obj{{ fld.id }}">
+                    <option></option>
+                    {% for ro in fld.forcefield.refs %}
+                    <option value="{{ ro.id }}">{{ ro.forceobj.label }}</option>
+                    {% endfor %}
+                </select>
+                {% endif %}
+            </dd>
         {% endfor %}
-        </ul>
-    </li>
+        <input type="submit" value="Update Object" />
+    </form>
 {% endfor %}
-</ul> -->
+        </dd>
+    </dl>
+</dl>
 {% else %}
     <select name="forceobj">
         <option></option>
